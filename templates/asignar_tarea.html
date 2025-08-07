@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Asignar Tarea{% endblock %}
+
+{% block content %}
+<div class="header-nav">
+    <a href="{{ url_for('admin') }}" class="btn btn-primary">Volver al Panel de Admin</a>
+</div>
+
+<div class="container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <ul class="flashes">
+            {% for category, message in messages %}
+                <li class="alert alert-{{ category }}">{{ message }}</li>
+            {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+    
+    <h1>Asignar Tarea de Mantenimiento</h1>
+    <form action="{{ url_for('asignar_tarea') }}" method="POST" class="form-reserva">
+        <label for="id_instalacion">Instalación:</label>
+        <select id="id_instalacion" name="id_instalacion" required>
+            {% for instalacion in instalaciones %}
+                <option value="{{ instalacion.id_instalacion }}">{{ instalacion.nombre }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="id_usuario_asignado">Asignar a:</label>
+        <select id="id_usuario_asignado" name="id_usuario_asignado" required>
+            {% for usuario in usuarios_no_admin %}
+                <option value="{{ usuario.id_usuario }}">{{ usuario.nombre }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="tipo_tarea">Tipo de Tarea:</label>
+        <select id="tipo_tarea" name="tipo_tarea" required>
+            <option value="Mantenimiento">Mantenimiento</option>
+            <option value="Reparacion">Reparación</option>
+            <option value="Inspeccion">Inspección</option>
+        </select>
+
+        <label for="descripcion">Descripción:</label>
+        <textarea id="descripcion" name="descripcion" rows="4" required></textarea>
+
+        <button type="submit" class="btn btn-success">Asignar Tarea</button>
+        <a href="{{ url_for('admin') }}" class="btn btn-danger">Cancelar</a>
+    </form>
+</div>
+{% endblock %}

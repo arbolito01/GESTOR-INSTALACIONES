@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}Reserva Exitosa{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>¡Reserva Exitosa!</h1>
+    <p>Tu reserva ha sido confirmada con éxito.</p>
+    
+    <h2>Detalles de la Reserva:</h2>
+    <ul>
+        <li><strong>Instalación:</strong> {{ instalacion.nombre }}</li>
+        <li><strong>Nombre del Cliente:</strong> {{ reserva.nombre_cliente }}</li>
+        <li><strong>Fecha:</strong> {{ reserva.fecha }}</li>
+        <li><strong>Hora de inicio:</strong> {{ reserva.hora_inicio }}</li>
+        <li><strong>Hora de fin:</strong> {{ reserva.hora_fin }}</li>
+    </ul>
+
+    <div style="margin-top: 20px;">
+        <a href="{{ url_for('detalle_instalacion', id=instalacion.id_instalacion) }}" class="btn btn-primary">Volver a la instalación</a>
+    </div>
+</div>
+{% endblock %}

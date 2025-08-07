@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Mis Reservas{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Mis Reservas</h1>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    {% if reservas %}
+        <ul class="lista-reservas">
+        {% for reserva in reservas %}
+            <li class="reserva-item">
+                <div class="reserva-info">
+                    <strong>{{ reserva.nombre_instalacion }}</strong>
+                    <p>Fecha: {{ reserva.fecha }}</p>
+                    <p>Horario: {{ reserva.hora_inicio }} a {{ reserva.hora_fin }}</p>
+                </div>
+                <form action="{{ url_for('eliminar_reserva', id_reserva=reserva.id_reserva) }}" method="POST" class="form-inline">
+                    <button type="submit" onclick="return confirm('¿Estás seguro de que quieres eliminar esta reserva?');" class="btn btn-danger">Eliminar</button>
+                </form>
+            </li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p>No tienes ninguna reserva. ¡Empieza a reservar una <a href="{{ url_for('index') }}">aquí</a>!</p>
+    {% endif %}
+</div>
+{% endblock %}

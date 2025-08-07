@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Editar Instalación{% endblock %}
+
+{% block content %}
+<div class="header-nav">
+    <a href="{{ url_for('admin') }}" class="btn btn-primary">Volver al Panel de Admin</a>
+</div>
+
+<div class="container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <ul class="flashes">
+            {% for category, message in messages %}
+                <li class="alert alert-{{ category }}">{{ message }}</li>
+            {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+    
+    <h1>Editar Instalación: {{ instalacion.nombre }}</h1>
+    <form action="{{ url_for('editar_instalacion', id=instalacion.id_instalacion) }}" method="POST" class="form-reserva" enctype="multipart/form-data">
+        <label for="nombre">Nombre:</label>
+        <input type="text" id="nombre" name="nombre" value="{{ instalacion.nombre }}" required>
+
+        <label for="descripcion">Descripción:</label>
+        <textarea id="descripcion" name="descripcion" rows="4" required>{{ instalacion.descripcion }}</textarea>
+        
+        <label for="imagen">Imagen actual:</label>
+        {% if instalacion.imagen_url %}
+            <img src="{{ url_for('static', filename='uploads/' + instalacion.imagen_url.split('/')[-1]) }}" alt="Imagen actual" style="max-width: 200px; display: block; margin-bottom: 10px;">
+            <input type="hidden" name="imagen_actual" value="{{ instalacion.imagen_url }}">
+        {% else %}
+            <p>No hay imagen cargada.</p>
+            <input type="hidden" name="imagen_actual" value="">
+        {% endif %}
+
+        <label for="imagen">Subir nueva imagen:</label>
+        <input type="file" id="imagen" name="imagen" accept="image/*">
+
+        <label for="estado">Estado:</label>
+        <select id="estado" name="estado">
+            <option value="Disponible" {% if instalacion.estado == 'Disponible' %}selected{% endif %}>Disponible</option>
+            <option value="Mantenimiento" {% if instalacion.estado == 'Mantenimiento' %}selected{% endif %}>Mantenimiento</option>
+            <option value="Fuera de Servicio" {% if instalacion.estado == 'Fuera de Servicio' %}selected{% endif %}>Fuera de Servicio</option>
+        </select>
+
+        <button type="submit" class="btn btn-success">Guardar Cambios</button>
+        <a href="{{ url_for('admin') }}" class="btn btn-danger">Cancelar</a>
+    </form>
+</div>
+{% endblock %}

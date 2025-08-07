@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}Reparación/Migración de Cliente{% endblock %}
+
+{% block content %}
+<div class="header-nav">
+    <a href="{{ url_for('admin') }}" class="btn btn-primary">Volver al Panel de Admin</a>
+</div>
+
+<div class="container">
+    <h1>Asignar Tarea de Reparación/Migración</h1>
+    <form action="{{ url_for('reparacion_migracion') }}" method="POST" class="form-reserva">
+        
+        <h2 class="form-section-title">Datos del Cliente</h2>
+        <div class="form-group">
+            <label for="search_input">Buscar Usuario:</label>
+            <div style="display: flex; gap: 10px;">
+                <input type="text" id="search_input" class="form-input" placeholder="Ingresa nombre de usuario...">
+                <button type="button" id="search_button" class="btn btn-primary">Buscar</button>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="nombre_cliente">Nombre de Usuario (Seleccionado):</label>
+            <select id="nombre_cliente" name="nombre_cliente" class="form-select" required>
+                <option value="">Selecciona un usuario</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="tipo_servicio">Tipo de Servicio:</label>
+            <input type="text" id="tipo_servicio" name="tipo_servicio" readonly required>
+        </div>
+        <div class="form-group">
+            <label for="telefono_cliente">Teléfono del Cliente:</label>
+            <input type="tel" id="telefono_cliente" name="telefono_cliente" readonly required>
+        </div>
+        
+        <h2 class="form-section-title">Detalles de la Tarea</h2>
+        <div class="form-group">
+            <label for="tipo_tarea">Tipo de Tarea:</label>
+            <select id="tipo_tarea" name="tipo_tarea" required>
+                <option value="Reparacion">Reparación</option>
+                <option value="Migracion">Migración</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="id_usuario_asignado">Asignar a:</label>
+            <select id="id_usuario_asignado" name="id_usuario_asignado" required>
+                {% for usuario in usuarios_no_admin %}
+                    <option value="{{ usuario.id_usuario }}">{{ usuario.nombre }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="descripcion">Descripción de la Tarea:</label>
+            <textarea id="descripcion" name="descripcion" rows="4" required></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-success">Asignar Tarea</button>
+        <a href="{{ url_for('admin') }}" class="btn btn-danger">Cancelar</a>
+    </form>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('search_input');
+        const searchButton = document.getElementById('search_button');
+        const selectUsuario = document.getElementById('nombre_cliente');
+        const inputServicio = document.getElementById('tipo_servicio');
+        const inputTelefono = document.getElementById('telefono_cliente');
+        let allUsers = [];
+
+        function fetchUsers(query = '') {
+            let url = '/api/mikrotik_users';
+            if (query) {
+                url += `?q=${query}`;
+            }
+            
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    allUsers = data;
+                    updateSelectOptions(data);
+                })
+                .catch(error => {
+                    console.error('Error al cargar usuarios:', error);
+                    selectUsuario.innerHTML = '<option value="">Error al cargar usuarios</option>';
+                });
+        }
+
+        function updateSelectOptions(users) {
+            selectUsuario.innerHTML = '<option value="">Selecciona un usuario</option>';
+            users.forEach(user => {
+                const option = document.createElement('option');
+                option.value = user.username;
+                option.textContent = user.username;
+                selectUsuario.appendChild(option);
+            });
+        }
+
+        searchButton.addEventListener('click', () => {
+            const query = searchInput.value;
+            fetchUsers(query);
+        });
+        
+        selectUsuario.addEventListener('change', function() {
+            const selectedUser = allUsers.find(user => user.username === this.value);
+            if (selectedUser) {
+                inputServicio.value = selectedUser.service;
+                inputTelefono.value = selectedUser.phone;
+            } else {
+                inputServicio.value = '';
+                inputTelefono.value = '';
+            }
+        });
+
+        // Cargar todos los usuarios al inicio
+        fetchUsers();
+    });
+</script>
+{% endblock %}
