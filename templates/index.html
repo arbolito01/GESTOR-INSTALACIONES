@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block title %}Gestor de Instalaciones{% endblock %}
+
+{% block header %}
+<header class="main-header">
+    <nav class="main-nav">
+        <span class="welcome-message">Hola, {{ session.nombre }}</span>
+        <div class="nav-links">
+            <a href="{{ url_for('mis_reservas') }}" class="nav-button">Mis Tareas</a>
+            {% if session.get('es_admin') %}
+                <a href="{{ url_for('admin') }}" class="nav-button">Panel de Admin</a>
+            {% endif %}
+            <a href="{{ url_for('logout') }}" class="nav-button logout-button">Cerrar Sesión</a>
+        </div>
+    </nav>
+</header>
+{% endblock %}
+
+{% block head %}
+    {{ super() }}
+    <style>
+        .installation-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .installation-card {
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+            overflow: hidden;
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .installation-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .card-content {
+            padding: 20px;
+            flex-grow: 1;
+        }
+        
+        .card-title {
+            font-size: 1.2em;
+            color: #333;
+            margin-bottom: 10px;
+            word-wrap: break-word;
+        }
+
+        .card-status {
+            font-weight: bold;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.9em;
+            text-align: center;
+        }
+
+        .status-disponible {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .status-pendiente {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        .card-description {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+
+        .add-button {
+            display: inline-block;
+            background-color: #28a745;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            transition: background-color 0.2s, transform 0.2s;
+        }
+
+        .add-button:hover {
+            background-color: #218838;
+            transform: translateY(-2px);
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Lista de Instalaciones</h1>
+
+    {% if es_admin %}
+    <a href="{{ url_for('nueva_instalacion') }}" class="add-button">Añadir Nueva Instalación</a>
+    {% endif %}
+
+
+{% if instalaciones %}
+<div class="installation-list">
+    {% for instalacion in instalaciones %}
+    <a href="{{ url_for('detalle_instalacion', id=instalacion.id_instalacion) }}" class="installation-card">
+        <div class="card-content">
+            <h2 class="card-title">{{ instalacion.nombre }}</h2>
+            <p>
+                <span class="card-status status-{{ instalacion.estado|lower|replace(' ', '-') }}">
+                    {{ instalacion.estado }}
+                </span>
+            </p>
+            <p class="card-description">{{ instalacion.descripcion or 'Sin descripción' }}</p>
+        </div>
+    </a>
+    {% endfor %}
+</div>
+{% else %}
+
+    <p class="alert">No hay instalaciones disponibles en este momento.</p>
+    {% endif %}
+</div>
+{% endblock %}

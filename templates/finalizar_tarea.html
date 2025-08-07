@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+
+{% block title %}Completar Tarea{% endblock %}
+
+{% block head %}
+    {{ super() }}
+    <style>
+        /* Estilos específicos para este formulario */
+        #map {
+            height: 400px;
+            width: 100%;
+            margin-top: 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+        .form-group label.required::after {
+            content: '*';
+            color: var(--error-color);
+            margin-left: 5px;
+        }
+        .form-group input:invalid:not(:focus):not(:placeholder-shown),
+        .form-group textarea:invalid:not(:focus):not(:placeholder-shown) {
+            border-color: var(--error-color);
+            box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.2);
+        }
+        .form-group input:invalid:not(:focus):not(:placeholder-shown) + .validation-message,
+        .form-group textarea:invalid:not(:focus):not(:placeholder-shown) + .validation-message {
+            display: block;
+            color: var(--error-color);
+            font-size: 0.85rem;
+            margin-top: 5px;
+        }
+        .validation-message {
+            display: none;
+        }
+        .form-group input[type="text"],
+        .form-group input[type="password"],
+        .form-group input[type="email"],
+        .form-group input[type="file"],
+        .form-group textarea,
+        .form-group select {
+            padding: 12px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-sizing: border-box;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+            width: 100%;
+        }
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        .form-group input[type="text"]:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<main>
+    <h1 class="page-title">Completar Instalación</h1>
+    <div class="form-container">
+        <h2 class="task-title">{{ tarea.nombre_cliente }}</h2>
+        <div class="read-only-field">
+            <strong>Descripción original:</strong>
+            <p>{{ tarea.descripcion }}</p>
+        </div>
+        <div class="read-only-field">
+            <strong>Ubicación inicial (GPS):</strong>
+            <p>{{ tarea.ubicacion_gps }}</p>
+        </div>
+
+        <form action="{{ url_for('completar_instalacion', instalacion_id=tarea.id_instalacion) }}" method="POST" enctype="multipart/form-data" onsubmit="return validateForm()">
+            <div class="form-group">
+                <label for="direccion_referencia" class="required">Dirección o Referencia:</label>
+                <textarea id="direccion_referencia" name="referencia" rows="2" required>{{ tarea.referencia or '' }}</textarea>
+            </div>
+
+            <hr>
+
+            <div class="form-group">
+                <label for="numero_serie" class="required">Número de Serie del equipo instalado:</label>
+                <input type="text" id="numero_serie" name="numero_serie" required>
+            </div>
+
+            <hr>
+
+            <label>Método de pago:</label>
+            <div class="form-group-radio">
+                <input type="radio" id="pago_efectivo" name="metodo_pago" value="efectivo" checked>
+                <label for="pago_efectivo">Efectivo</label>
+                <input type="radio" id="pago_transferencia" name="metodo_pago" value="transferencia">
+                <label for="pago_transferencia">Transferencia</label>
+            </div>
+            
+            <div id="campo_transaccion" class="hidden">
+                <div class="form-group">
+                    <label for="numero_transaccion" class="required">Número de transacción:</label>
+                    <input type="text" id="numero_transaccion" name="numero_transaccion">
+                </div>
+            </div>
+
+            <hr>
+            
+            <div class="form-group">
+                <label for="descripcion_final" class="required">Descripción final:</label>
+                <textarea id="descripcion_final" name="descripcion" rows="4" required>{{ tarea.descripcion_final or '' }}</textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="foto" class="required">Foto de la instalación:</label>
+                <input type="file" id="foto" name="foto" accept="image/*" required>
+            </div>
+
+            <h2 class="form-section-title mt-6">Ubicación GPS (Obligatoria)</h2>
+            <p class="text-sm text-gray-500 mb-2">Arrastra el marcador a la ubicación exacta o usa tu ubicación actual.</p>
+            <button type="button" id="get-location-btn" class="btn-secondary w-full mb-4">Usar mi ubicación actual</button>
+            <div id="map" class="h-64 w-full border border-gray-300 rounded-md mb-4"></div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="form-group">
+                    <label for="latitud" class="form-label">Latitud</label>
+                    <input type="text" id="latitud" name="latitud" class="form-input" placeholder="Ej: -12.046374" required readonly>
+                </div>
+                <div class="form-group">
+                    <label for="longitud" class="form-label">Longitud</label>
+                    <input type="text" id="longitud" name="longitud" class="form-input" placeholder="Ej: -77.042793" required readonly>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-submit">Finalizar Tarea</button>
+        </form>
+    </div>
+</main>
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+    <script>
+        let map, marker;
+        const latInput = document.getElementById('latitud');
+        const lngInput = document.getElementById('longitud');
+        const getLocationBtn = document.getElementById('get-location-btn');
+        const initialLocation = "{{ tarea.ubicacion_gps or '0,0' }}".split(',').map(Number);
+        const defaultLocation = { lat: initialLocation[0] || -12.046374, lng: initialLocation[1] || -77.042793 };
+
+        function initMap() {
+            map = new google.maps.Map(document.getElementById("map"), {
+                zoom: 12,
+                center: defaultLocation,
+            });
+
+            marker = new google.maps.Marker({
+                position: defaultLocation,
+                map: map,
+                draggable: true,
+            });
+
+            latInput.value = defaultLocation.lat;
+            lngInput.value = defaultLocation.lng;
+
+            marker.addListener("dragend", (event) => {
+                const newLat = event.latLng.lat();
+                const newLng = event.latLng.lng();
+                latInput.value = newLat.toFixed(6);
+                lngInput.value = newLng.toFixed(6);
+            });
+
+            getLocationBtn.addEventListener('click', () => {
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                            const pos = {
+                                lat: position.coords.latitude,
+                                lng: position.coords.longitude,
+                            };
+                            map.setCenter(pos);
+                            marker.setPosition(pos);
+                            latInput.value = pos.lat.toFixed(6);
+                            lngInput.value = pos.lng.toFixed(6);
+                        },
+                        () => {
+                            handleLocationError(true, map.getCenter());
+                        }
+                    );
+                } else {
+                    handleLocationError(false, map.getCenter());
+                }
+            });
+        }
+
+        function handleLocationError(browserHasGeolocation, pos) {
+            alert(
+                browserHasGeolocation
+                    ? "Error: El servicio de geolocalización falló o no se concedieron los permisos."
+                    : "Error: Tu navegador no soporta geolocalización."
+            );
+        }
+    </script>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCj9wq8Rhy7rOXccIQ8GbQN37Qd5GjfXvw&callback=initMap"></script>
+{% endblock %}

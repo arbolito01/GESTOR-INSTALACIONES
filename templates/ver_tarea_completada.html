@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}Detalles de Tarea Completada{% endblock %}
+
+{% block content %}
+<div class="main-content-card">
+    <h1 class="text-3xl font-bold text-gray-800 mb-6">Detalles de Tarea Completada</h1>
+    
+    <div class="space-y-4">
+        <div>
+            <h2 class="form-section-title">Información de la Solicitud</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="form-group">
+                    <label class="form-label font-bold">Cliente:</label>
+                    <p>{{ tarea.nombre_cliente }}</p>
+                </div>
+                <div class="form-group">
+                    <label class="form-label font-bold">Código de Cliente:</label>
+                    <p>{{ tarea.codigo_cliente }}</p>
+                </div>
+                <div class="form-group">
+                    <label class="form-label font-bold">Teléfono:</label>
+                    <p>{{ tarea.telefono_cliente }}</p>
+                </div>
+                <div class="form-group">
+                    <label class="form-label font-bold">Tipo de Solicitud:</label>
+                    <p>{{ tarea.solicitud }}</p>
+                </div>
+                <div class="form-group">
+                    <label class="form-label font-bold">Descripción original:</label>
+                    <p>{{ tarea.descripcion }}</p>
+                </div>
+                <div class="form-group">
+                    <label class="form-label font-bold">Referencia del Domicilio:</label>
+                    <p>{{ tarea.referencia }}</p>
+                </div>
+                <div class="form-group">
+                    <label class="form-label font-bold">Ruta y Caja NAP:</label>
+                    <p>{{ tarea.ruta_caja_nap }}</p>
+                </div>
+                <div class="form-group">
+                    <label class="form-label font-bold">Ubicación inicial (GPS):</label>
+                    <p>{{ tarea.ubicacion_gps }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <h2 class="form-section-title">Reporte de Finalización</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="form-group">
+                    <label class="form-label font-bold">Descripción Final:</label>
+                    <p>{{ tarea.descripcion_final or 'No hay descripción final.' }}</p>
+                </div>
+                <div class="form-group">
+                    <label class="form-label font-bold">Fecha de Finalización:</label>
+                    <p>{{ tarea.fecha_completado }}</p>
+                </div>
+                <div class="form-group">
+                    <label class="form-label font-bold">Ubicación Final (GPS):</label>
+                    <p>{{ tarea.ubicacion_gps_final or 'No hay ubicación final.' }}</p>
+                </div>
+                {% if tarea.foto_adjunta %}
+                    <div class="form-group col-span-2">
+                        <label class="form-label font-bold">Foto de la Instalación:</label>
+                        <img src="{{ url_for('static', filename='uploads/' + tarea.foto_adjunta.split('/')[-1]) }}" alt="Foto de la instalación completada" class="mt-2 rounded-lg shadow-md" style="max-width: 100%; height: auto;">
+                    </div>
+                {% else %}
+                    <div class="form-group col-span-2">
+                        <p class="text-gray-500">No hay foto adjunta.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-8 text-center">
+        <a href="{{ url_for('mis_tareas_completadas') }}" class="btn-primary">Volver al Historial</a>
+    </div>
+</div>
+{% endblock %}

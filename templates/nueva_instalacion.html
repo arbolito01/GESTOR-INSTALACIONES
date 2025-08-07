@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block title %}Nueva Instalación{% endblock %}
+
+{% block content %}
+<div class="main-content-card">
+    <h1 class="text-3xl font-bold text-gray-800 mb-6">Añadir Nueva Instalación/Solicitud</h1>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <ul class="flashes mb-4">
+                {% for category, message in messages %}
+                    <li class="alert alert-{{ category }}">{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+
+    <form action="{{ url_for('nueva_instalacion') }}" method="POST" enctype="multipart/form-data" class="space-y-4">
+        <h2 class="form-section-title">Información de la Instalación</h2>
+        <div class="form-group">
+            <label for="nombre" class="form-label">Nombre de la Instalación</label>
+            <input type="text" id="nombre" name="nombre" class="form-input" required>
+        </div>
+        <div class="form-group">
+            <label for="descripcion" class="form-label">Descripción</label>
+            <textarea id="descripcion" name="descripcion" class="form-textarea" required></textarea>
+        </div>
+        <div class="form-group">
+            <label for="estado" class="form-label">Estado</label>
+            <select id="estado" name="estado" class="form-select" required>
+                <option value="Pendiente">Pendiente</option>
+                <option value="Asignado">Asignado</option>
+                <option value="Completado">Completado</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="imagen" class="form-label">Imagen de Referencia</label>
+            <input type="file" id="imagen" name="imagen" class="form-file">
+        </div>
+
+        <h2 class="form-section-title mt-6">Detalles del Cliente</h2>
+        <div class="form-group">
+            <label for="codigo_cliente" class="form-label">Código de Cliente</label>
+            <input type="text" id="codigo_cliente" name="codigo_cliente" class="form-input" required>
+        </div>
+        <div class="form-group">
+            <label for="nombre_cliente" class="form-label">Nombre del Cliente</label>
+            <input type="text" id="nombre_cliente" name="nombre_cliente" class="form-input" required>
+        </div>
+        <div class="form-group">
+            <label for="telefono_cliente" class="form-label">Teléfono del Cliente</label>
+            <input type="tel" id="telefono_cliente" name="telefono_cliente" class="form-input" required>
+        </div>
+        <div class="form-group">
+            <label for="solicitud" class="form-label">Tipo de Solicitud</label>
+            <input type="text" id="solicitud" name="solicitud" class="form-input" required>
+        </div>
+        <div class="form-group">
+            <label for="referencia" class="form-label">Referencia del Domicilio</label>
+            <input type="text" id="referencia" name="referencia" class="form-input" required>
+        </div>
+        <div class="form-group">
+            <label for="ruta_caja_nap" class="form-label">Ruta y Caja NAP</label>
+            <input type="text" id="ruta_caja_nap" name="ruta_caja_nap" class="form-input" required>
+        </div>
+
+        <h2 class="form-section-title mt-6">Asignación de Tarea</h2>
+        <div class="form-group">
+            <label for="tecnico_asignado" class="form-label">Técnico Asignado</label>
+            <select id="tecnico_asignado" name="tecnico_asignado" class="form-select" required>
+                <option value="">Selecciona un técnico</option>
+                {% for tecnico in tecnicos %}
+                    <option value="{{ tecnico.id_usuario }}">{{ tecnico.nombre }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="hora_solicitada" class="form-label">Hora Solicitada</label>
+            <input type="time" id="hora_solicitada" name="hora_solicitada" class="form-input" required>
+        </div>
+
+        <h2 class="form-section-title mt-6">Ubicación GPS</h2>
+        <button type="button" id="get-location-btn" class="btn-secondary w-full mb-4">Usar mi ubicación actual</button>
+        <div id="map" class="h-64 w-full border border-gray-300 rounded-md mb-4"></div>
+        <div class="form-group">
+            <label for="latitud" class="form-label">Latitud</label>
+            <input type="text" id="latitud" name="latitud" class="form-input" placeholder="Ej: -12.046374" required readonly>
+        </div>
+        <div class="form-group">
+            <label for="longitud" class="form-label">Longitud</label>
+            <input type="text" id="longitud" name="longitud" class="form-input" placeholder="Ej: -77.042793" required readonly>
+        </div>
+
+        <button type="submit" class="btn-primary w-full mt-6">
+            Añadir Instalación
+        </button>
+    </form>
+</div>
+
+<script>
+    let map, marker;
+    const latInput = document.getElementById('latitud');
+    const lngInput = document.getElementById('longitud');
+    const getLocationBtn = document.getElementById('get-location-btn');
+
+    function initMap() {
+        const defaultLocation = { lat: -12.046374, lng: -77.042793 }; // Lima, Perú
+        map = new google.maps.Map(document.getElementById("map"), {
+            zoom: 12,
+            center: defaultLocation,
+        });
+
+        marker = new google.maps.Marker({
+            position: defaultLocation,
+            map: map,
+            draggable: true,
+        });
+
+        latInput.value = defaultLocation.lat;
+        lngInput.value = defaultLocation.lng;
+
+        marker.addListener("dragend", (event) => {
+            const newLat = event.latLng.lat();
+            const newLng = event.latLng.lng();
+            latInput.value = newLat.toFixed(6);
+            lngInput.value = newLng.toFixed(6);
+        });
+
+        getLocationBtn.addEventListener('click', () => {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const pos = {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude,
+                        };
+                        map.setCenter(pos);
+                        marker.setPosition(pos);
+                        latInput.value = pos.lat.toFixed(6);
+                        lngInput.value = pos.lng.toFixed(6);
+                    },
+                    () => {
+                        handleLocationError(true, map.getCenter());
+                    }
+                );
+            } else {
+                handleLocationError(false, map.getCenter());
+            }
+        });
+    }
+
+    function handleLocationError(browserHasGeolocation, pos) {
+        alert(
+            browserHasGeolocation
+                ? "Error: El servicio de geolocalización falló o no se concedieron los permisos."
+                : "Error: Tu navegador no soporta geolocalización."
+        );
+    }
+</script>
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCj9wq8Rhy7rOXccIQ8GbQN37Qd5GjfXvw&callback=initMap"></script>
+{% endblock %}

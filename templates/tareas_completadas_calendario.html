@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}Calendario de Tareas Completadas{% endblock %}
+
+{% block content %}
+<div class="main-content-card">
+    <h1 class="text-3xl font-bold text-gray-800 mb-6">Mis Tareas Completadas en Calendario</h1>
+
+    <div id="calendar" class="p-4 bg-white rounded-lg shadow-md"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var calendarEl = document.getElementById('calendar');
+        var calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            locale: 'es',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,timeGridDay'
+            },
+            events: '/api/mis_tareas_completadas'
+        });
+        calendar.render();
+    });
+</script>
+{% endblock %}

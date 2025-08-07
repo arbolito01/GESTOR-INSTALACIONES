@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}Mis Tareas{% endblock %}
+
+{% block head %}
+    {{ super() }}
+    <style>
+        .task-card {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .task-card h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .task-card p {
+            margin: 5px 0;
+        }
+        .task-status-pendiente {
+            color: #d9534f; /* Rojo */
+            font-weight: bold;
+        }
+        .task-status-completada {
+            color: #5cb85c; /* Verde */
+            font-weight: bold;
+        }
+        .task-actions {
+            margin-top: 15px;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <h1>Mis Tareas Asignadas</h1>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% if mis_tareas %}
+            <p>Aquí tienes un resumen de todas las tareas que te han sido asignadas.</p>
+            {% for tarea in mis_tareas %}
+                <div class="task-card">
+                    <h3>Tarea: {{ tarea.tipo_tarea }}</h3>
+                    <p><strong>Instalación:</strong> {{ tarea.nombre_instalacion }}</p>
+                    <p><strong>Descripción:</strong> {{ tarea.descripcion }}</p>
+                    <p><strong>Fecha de Asignación:</strong> {{ tarea.fecha_asignacion }}</p>
+                    <p><strong>Estado:</strong> 
+                        <span class="task-status-{{ tarea.estado|lower }}">{{ tarea.estado }}</span>
+                    </p>
+                    <div class="task-actions">
+                        {% if tarea.estado != 'Completada' %}
+                            <a href="{{ url_for('completar_instalacion', instalacion_id=tarea.id_instalacion) }}" class="button">Completar Tarea</a>
+                        {% else %}
+                            <p>Esta tarea ya ha sido completada.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="alert">
+                <p>No tienes tareas asignadas en este momento. ¡Disfruta de tu tiempo libre!</p>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}
